@@ -14,6 +14,14 @@ import os
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 
+# Dictionary to store our latency measurements for the report
+timing_stats = {
+    'pre_image_processing': [],
+    'async_callback': [],
+    'serial_comm': [],
+    'total_loop': []
+}
+
 class SerialComms:
     def __init__(self, serial_port='/dev/ttyACM0', baud_rate=9600):
         # Setup serial connection to Arduino
@@ -34,13 +42,16 @@ class SerialComms:
                     port = p.device
         print(port)
     def  writeMsg(self,msg):
+        if self.arduino is None: return # Safety check if Arduino isn't plugged in
         msg = (msg + '\n').encode()
-        print(f"sending: {msg}")
+        # print(f"sending: {msg}")
         self.arduino.write(msg)
     def readMsg(self):
+        if self.arduino is None: return "" # Safety check if Arduino isn't plugged in
         # Verification to check that it did read correctly, just sends it back from arduino
         msgRD = self.arduino.readline()
-        print(f'Arduino Says: {msgRD}\n')
+        # print(f'Arduino Says: {msgRD}\n')
+        return msgRD
 
 controller = SerialComms()
 
@@ -56,6 +67,13 @@ latest_result = None
 
 def print_result(result: HandLandmarkerResult, output_image: mp.Image, timestamp_ms: int):
     global latest_result # create a global result to use in detection
+    global timing_stats
+    
+    # Calculate MediaPipe 'detect_async' callback delay
+    callback_time_ms = int(time.time() * 1000)
+    async_delay = callback_time_ms - timestamp_ms
+    timing_stats['async_callback'].append(async_delay)
+    
     latest_result = result # to update and use the latest result 
     # print('hand landmarker result: {}'.format(result))
 
@@ -106,18 +124,19 @@ def draw_landmarks_on_image(rgb_image, detection_result):
         text_x = int(min(x_coordinates) * width)
         text_y = int(min(y_coordinates) * height) - MARGIN
         
+        # EXTRACT CONFIDENCE SCORE: 
         # Get the score from the handedness object and format it as a percentage
         confidence_score = handedness[0].score
         display_text = f"{handedness[0].category_name} ({confidence_score:.1%})"
-
-        # Draw handedness (left or right hand) on the image.
+        
+        # Draw handedness (left or right hand) and confidence on the image.
         cv2.putText(annotated_image, display_text,
                     (text_x, text_y), cv2.FONT_HERSHEY_DUPLEX,
                     FONT_SIZE, HANDEDNESS_TEXT_COLOR, FONT_THICKNESS, cv2.LINE_AA)
       return annotated_image
   except:
     return rgb_image
-  
+
 def count_fingers_raised(rgb_image, detection_result: HandLandmarkerResult):
    """Iterate through each hand, checking if fingers (and thumb) are raised.
    Hand landmark enumeration (and weird naming convention) comes from
@@ -219,19 +238,24 @@ def finger_raised_image(rgb_image, numRaised):
 
 def arduinoMotors(currFingerState, numRaised):
       finger_prefixes = ["t", "i", "m", "r", "l"]
+      global timing_stats
 
       for i in range(5):
          if numRaised[i] != currFingerState[i]:
-            if (numRaised[i] == 1):
-               command = finger_prefixes[i] + "o"
-               controller.writeMsg(command)
-               controller.readMsg()
-            else:
-               command = finger_prefixes[i] + "c"
-               controller.writeMsg(command)
-               controller.readMsg()
+            command = finger_prefixes[i] + ("o" if numRaised[i] == 1 else "c")
+            
+            # Measure Serial Communication latency
+            start_serial = time.time()
+            controller.writeMsg(command)
+            controller.readMsg()
+            end_serial = time.time()
+            
+            timing_stats['serial_comm'].append((end_serial - start_serial) * 1000)
 
 def main():
+  global timing_stats
+  frame_count = 0
+
   with HandLandmarker.create_from_options(options) as landmarker:
     web = cv2.VideoCapture(0)
     web.set(cv2.CAP_PROP_FRAME_WIDTH, 600)
@@ -239,10 +263,15 @@ def main():
     currFingerState = [0, 0, 0, 0, 0]
 
     while web.isOpened():
-        ret,frame = web.read()
+        loop_start = time.time()
 
+        # --- Measure Pre-Image Processing ---
+        pre_img_start = time.time()
+        ret,frame = web.read()
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) # mp_image needs to be in this format
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb) # make the frame into numpy to allow mediapipe to edit
+        pre_img_end = time.time()
+        timing_stats['pre_image_processing'].append((pre_img_end - pre_img_start) * 1000)
 
         frame_timestamp_ms = int(time.time() * 1000)
         landmarker.detect_async(mp_image, frame_timestamp_ms) # async-ly compute hand landmark pos
@@ -256,14 +285,36 @@ def main():
         finger_count_frame = finger_raised_image(skeleton_hand_frame, numRaised) # convert this to an annotated image to output
         finger_count_frame_bgr = cv2.cvtColor(finger_count_frame, cv2.COLOR_RGB2BGR) # change back mp_image to normal view
 
+        # Uncommented this so the Serial Comm latency is actively measured
         arduinoMotors(currFingerState, numRaised)
         currFingerState = numRaised.copy() # needs to go after 
 
         # cv2.imshow("skeleton hand", skeleton_hand_frame_bgr)
         cv2.imshow("finger count", finger_count_frame_bgr)
 
-        # print(HandLandmarkerResult)
-    
+        # --- Measure Total System Latency (Software side) ---
+        loop_end = time.time()
+        timing_stats['total_loop'].append((loop_end - loop_start) * 1000)
+
+        frame_count += 1
+        
+        # Print averages to the console every 30 frames for easy recording
+        if frame_count % 30 == 0:
+            print("\n--- Latency Measurements (30-frame rolling average) ---")
+            if timing_stats['pre_image_processing']:
+                avg_pre = sum(timing_stats['pre_image_processing'][-30:]) / min(30, len(timing_stats['pre_image_processing']))
+                print(f"Pre-Image Processing: {avg_pre:.2f} ms")
+            if timing_stats['async_callback']:
+                avg_async = sum(timing_stats['async_callback'][-30:]) / min(30, len(timing_stats['async_callback']))
+                print(f"Async Frame Analysis: {avg_async:.2f} ms")
+            if timing_stats['serial_comm']:
+                avg_serial = sum(timing_stats['serial_comm'][-30:]) / min(30, len(timing_stats['serial_comm']))
+                print(f"Communication Serial: {avg_serial:.2f} ms")
+            if timing_stats['total_loop']:
+                avg_loop = sum(timing_stats['total_loop'][-30:]) / min(30, len(timing_stats['total_loop']))
+                print(f"Total Software Latency: {avg_loop:.2f} ms")
+            print("-------------------------------------------------------")
+
         # Check for 'q' to quit
         if cv2.waitKey(1) & 0xFF == ord('q'):
           break
@@ -273,4 +324,4 @@ def main():
 
 # genuienly forgot what this is for
 if __name__ == "__main__":
-  main() 
+  main()
