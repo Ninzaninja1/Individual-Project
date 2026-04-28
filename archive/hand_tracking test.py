@@ -64,7 +64,7 @@ options = HandLandmarkerOptions(
     base_options=base_options,
     running_mode=VisionRunningMode.LIVE_STREAM,
     result_callback=print_result,
-    num_hands=2)
+    num_hands=1)
 
 # Google's implementation of some functions to visualize the hand landmark detection results. 
 

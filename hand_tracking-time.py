@@ -267,9 +267,11 @@ def main():
 
         # --- Measure Pre-Image Processing ---
         pre_img_start = time.time()
+
         ret,frame = web.read()
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) # mp_image needs to be in this format
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb) # make the frame into numpy to allow mediapipe to edit
+
         pre_img_end = time.time()
         timing_stats['pre_image_processing'].append((pre_img_end - pre_img_start) * 1000)
 

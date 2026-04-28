@@ -60,7 +60,7 @@ void loop() {
     msg.trim();
 
       if(msg == "to"){
-        pwm.writeMicroseconds(0, open);
+        pwm.writeMicroseconds(0, close);
         Serial.println("thumb open: ");
       }
       else if (msg == "io"){
@@ -79,8 +79,11 @@ void loop() {
         pwm.writeMicroseconds(3, close);
         Serial.println("little open: ");
       }
+
+
+
       else if(msg == "tc"){
-        pwm.writeMicroseconds(0, close);
+        pwm.writeMicroseconds(0, open);
         Serial.println("thumb close: ");
       }
       else if (msg == "ic"){
