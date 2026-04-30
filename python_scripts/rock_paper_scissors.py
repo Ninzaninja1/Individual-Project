@@ -36,6 +36,7 @@ class SerialComms:
         msgRD = arduino.readline()
         print(f'Arduino Says: {msgRD}\n')
 
+# modified by AI
 class RockPaperScissors:
     def __init__(self, serial_controller):
         self.controller = serial_controller
@@ -96,7 +97,7 @@ class RockPaperScissors:
         print("-------------\n")
 
 controller = SerialComms()
-os.environ["QT_QPA_PLATFORM"] = "xcb" 
+os.environ["QT_QPA_PLATFORM"] = "xcb"  # used to make it work with wayland in linux
 
 BaseOptions = mp.tasks.BaseOptions
 HandLandmarker = mp.tasks.vision.HandLandmarker
@@ -216,7 +217,7 @@ def finger_raised_image(rgb_image, numRaised):
       return rgb_image
 
 def main():
-  rps = RockPaperScissors(controller)
+  rps = RockPaperScissors(controller) # define object
 
   with HandLandmarker.create_from_options(options) as landmarker:
     web = cv2.VideoCapture(0)
@@ -250,7 +251,7 @@ def main():
         if key == ord('q'):
           break
         
-        # Check for 'p' to play a round of RPS
+        # press p to play a round of RPS
         elif key == ord('p'):
             human_move = rps.classify_human_hand(numRaised)
             if human_move != 'NULL':
@@ -258,7 +259,7 @@ def main():
                 rps.move_robot_hand(robot_move)
                 rps.declare_winner(human_move, robot_move)
             else:
-                print("Human position unclear. Please form a distinct Rock, Paper, or Scissors.")
+                print("Warning: Please form a distinct Rock, Paper, or Scissors.")
 
   web.release()
   cv2.destroyAllWindows()

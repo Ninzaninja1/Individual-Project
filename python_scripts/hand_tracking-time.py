@@ -300,7 +300,8 @@ def main():
 
         frame_count += 1
         
-        # Print averages to the console every 30 frames for easy recording
+        # Print averages to the console every 30 frames for easy recording 
+        # modified by AI
         if frame_count % 30 == 0:
             print("\n--- Latency Measurements (30-frame rolling average) ---")
             if timing_stats['pre_image_processing']:
@@ -324,6 +325,6 @@ def main():
   web.release()
   cv2.destroyAllWindows()
 
-# genuienly forgot what this is for
+# safety catch
 if __name__ == "__main__":
   main()

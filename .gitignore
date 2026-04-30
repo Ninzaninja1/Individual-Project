@@ -5,3 +5,4 @@ bin
 lib*
 .vscode
 c-space-sim.py
+pyvenv.cfg
