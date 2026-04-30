@@ -16,8 +16,7 @@ This software sits between the webcam input and mechanical actuation. The system
 4. Motors: The motors move between the software limits to extend or contract the fingers in the hand.
 
 ### 1.1. Physical Construction Images
-<img src="https://github.com/Ninzaninja1/Individual-Project/blob/master/src/Full_Assembly_closed_real.jpg" alt="drawing" width="400"/>
-<img src="https://github.com/Ninzaninja1/Individual-Project/blob/master/src/Full_Assembly_open_real.jpg" alt="drawing" width="400"/>
+<img src="https://github.com/Ninzaninja1/Individual-Project/blob/master/src/Full_Assembly_closed_real.jpg" alt="drawing" width="370"/> <img src="https://github.com/Ninzaninja1/Individual-Project/blob/master/src/Full_Assembly_open_real.jpg" alt="drawing" width="450"/>
 
 
 ## 2. Installation Instructions
