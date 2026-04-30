@@ -4,3 +4,4 @@ archive
 bin
 lib*
 .vscode
+c-space-sim.py
