@@ -77,12 +77,12 @@ def print_result(result: HandLandmarkerResult, output_image: mp.Image, timestamp
     latest_result = result # to update and use the latest result 
     # print('hand landmarker result: {}'.format(result))
 
-base_options = python.BaseOptions(model_asset_path='hand_landmarker.task')
+base_options = python.BaseOptions(model_asset_path='python_scripts/hand_landmarker.task')
 options = HandLandmarkerOptions(
     base_options=base_options,
     running_mode=VisionRunningMode.LIVE_STREAM,
     result_callback=print_result,
-    num_hands=2)
+    num_hands=1)
 
 # Google's implementation of some functions to visualize the hand landmark detection results. 
 
