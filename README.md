@@ -59,7 +59,7 @@ Update pip and install dependencies
 3. Configure the COM Port: Open the Python script (hand_tracking.py or rock_paper_scissors.py) and update the SERIAL_PORT variable to match the port your Arduino is connected to (e.g., COM3 on Windows or /dev/ttyACM0 on macOS/Linux).
 4. Execute the Script: Ensure your virtual environment is activated and you are in the correct directory, then run:
 ```bash
-./python_scripts/hand_tracking-time.py
+./python_scripts/hand_tracking.py
 ```
 or
 ```bash
