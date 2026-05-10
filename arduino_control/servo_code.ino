@@ -72,7 +72,7 @@ void loop() {
         Serial.println("middle open: ");
       }
       else if(msg == "ro"){
-        pwm.writeMicroseconds(4, open);
+        pwm.writeMicroseconds(4, close);
         Serial.println("ring open: ");
       }
       else if (msg == "lo"){
@@ -95,7 +95,7 @@ void loop() {
         Serial.println("middle close: ");
       }
       else if(msg == "rc"){
-        pwm.writeMicroseconds(4, close);
+        pwm.writeMicroseconds(4, open);
         Serial.println("ring close: ");
       }
       else if (msg == "lc"){
