@@ -55,15 +55,15 @@ Update pip and install dependencies
 ## 3. Usage
 
 1. Hardware Setup: Connect the Arduino Leonardo to your computer via USB. Ensure the PCA9685 board is powered by the external 5V/6A power supply.
-2. Flash the Arduino: Open the /servo_code/ folder, load the .ino sketch into the Arduino IDE, and upload it to the Leonardo board.
+2. Flash the Arduino: Open the /arduino_control/ folder, load the .ino sketch into the Arduino IDE, and upload it to the Leonardo board.
 3. Configure the COM Port: Open the Python script (hand_tracking.py or rock_paper_scissors.py) and update the SERIAL_PORT variable to match the port your Arduino is connected to (e.g., COM3 on Windows or /dev/ttyACM0 on macOS/Linux).
 4. Execute the Script: Ensure your virtual environment is activated and you are in the correct directory, then run:
 ```bash
-./python_scripts/hand_tracking.py
+./python_cv/hand_tracking.py
 ```
 or
 ```bash
-./python_scripts/rock_paper_scissors.py
+./python_cv/rock_paper_scissors.py
 ```
 5. Press q on your keyboard while the webcam window is active to quit the program safely.
 
